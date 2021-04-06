@@ -1,6 +1,10 @@
 const uaInfo = document.querySelector('#uainfo');
 
+const SensorFreq = 60;
+
 const geolocationValues = [];
+const deviceOrientationEvents = [];
+const deviceMotionEvents = [];
 const gyroscopeValues = [];
 const accelerometerValues = [];
 const linearAccelerationSensorValues = [];
@@ -15,6 +19,8 @@ document.querySelector('#button_to_save_bin').addEventListener('click', () => {
 
     const bufs = [
         geolocationValues,
+        deviceOrientationEvents,
+        deviceMotionEvents,
         gyroscopeValues,
         accelerometerValues,
         linearAccelerationSensorValues,
@@ -60,6 +66,8 @@ document.querySelector('#button_to_save_txt').addEventListener('click', () => {
 
     const resultTxt = [
         "GEOLOCATION", ...geolocationValues.map(rec => rec.join(",")),
+        "DEVICEORIENTATIONEVENTS", ...deviceOrientationEvents.map(rec => rec.join(",")),
+        "DEVICEMOTIONEVENTS", ...deviceMotionEvents.map(rec => rec.join(",")),
         "GYROSCOPE", ...gyroscopeValues.map(rec => rec.join(",")),
         "ACCELEROMETER", ...accelerometerValues.map(rec => rec.join(",")),
         "LINEARACCELERATIONSENSOR", ...linearAccelerationSensorValues.map(rec => rec.join(",")),
@@ -72,8 +80,6 @@ document.querySelector('#button_to_save_txt').addEventListener('click', () => {
     dlLink.download = `sensor-data-${Date.now()}.txt`;
     dlLink.click();
 });
-
-const SensorFreq = 10;
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API
 // https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions
@@ -98,11 +104,49 @@ const id = navigator.geolocation.watchPosition(
         uaInfo.innerText += `${error.code} ${error.message}\n`;
     },
     {
-        enableHighAccuracy: false,
+        enableHighAccuracy: true,
         timeout: 1000,
         maximumAge: 0
     }
 );
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Window/deviceorientation_event
+if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientation", event => {
+        deviceOrientationEvents.push([Date.now(),
+        event.alpha,// alpha: rotation around z-axis, rotate degrees
+        event.gamma,// left to right
+        event.beta, // front back motion, front to back
+        event.absolute ? 1.0 : 0.0]);
+    }, true);
+    uaInfo.innerText += "OK deviceorientation\n";
+} else {
+    uaInfo.innerText += "NG deviceorientation\n";
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Sensor_APIs
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Window/devicemotion_event
+if (window.DeviceMotionEvent) {
+    window.addEventListener("devicemotion", event => {
+
+        deviceMotionEvents.push([Date.now(),
+        event.acceleration.x,
+        event.acceleration.y,
+        event.acceleration.z,
+        event.accelerationIncludingGravity.x,
+        event.accelerationIncludingGravity.y,
+        event.accelerationIncludingGravity.z,
+        event.interval,
+        event.rotationRate.alpha,
+        event.rotationRate.gamma,
+        event.rotationRate.beta
+        ]);
+    }, true);
+    uaInfo.innerText += "OK devicemotion\n";
+} else {
+    uaInfo.innerText += "NG devicemotion\n";
+}
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Gyroscope
 try {
@@ -201,6 +245,8 @@ const startTs = Date.now();
 const itvId = setInterval(() => {
     const elapsed = (Date.now() - startTs) / 1000;
     elGeolocation.innerText = formatValues("Geolocation", geolocationValues.length, elapsed, geolocationValues[geolocationValues.length - 1]);
+    elDeviceorientation.innerText = formatValues("DeviceOrientationEvents", deviceOrientationEvents.length, elapsed, deviceOrientationEvents[deviceOrientationEvents.length - 1]);
+    elDevicemotion.innerText = formatValues("DeviceMotionEvent", deviceMotionEvents.length, elapsed, deviceMotionEvents[deviceMotionEvents.length - 1]);
     elGyroscope.innerText = formatValues("Gyroscope", gyroscopeValues.length, elapsed, gyroscopeValues[gyroscopeValues.length - 1]);
     elAccelerometer.innerText = formatValues("Accelerometer", accelerometerValues.length, elapsed, accelerometerValues[accelerometerValues.length - 1]);
     elLinearaccelerationsensor.innerText = formatValues("LinearAccelerationSensor", linearAccelerationSensorValues.length, elapsed, linearAccelerationSensorValues[linearAccelerationSensorValues.length - 1]);

@@ -11,6 +11,8 @@ elInp.addEventListener("change", (inp) => {
 });
 
 const geolocationValues = [];
+const deviceOrientationEvents = [];
+const deviceMotionEvents = [];
 const gyroscopeValues = [];
 const accelerometerValues = [];
 const linearAccelerationSensorValues = [];
@@ -27,6 +29,8 @@ elInpBin.addEventListener("change", (inp) => {
 
     const bufs = [
       geolocationValues,
+      deviceOrientationEvents,
+      deviceMotionEvents,
       gyroscopeValues,
       accelerometerValues,
       linearAccelerationSensorValues,
@@ -68,6 +72,10 @@ elInpBin.addEventListener("change", (inp) => {
     const resultTxt = [
       "GEOLOCATION",
       ...geolocationValues.map((rec) => rec.join(",")),
+      "DEVICEORIENTATIONEVENTS",
+      ...deviceOrientationEvents.map((rec) => rec.join(",")),,
+      "DEVICEMOTIONEVENTS",
+      ...deviceMotionEvents.map((rec) => rec.join(",")),
       "GYROSCOPE",
       ...gyroscopeValues.map((rec) => rec.join(",")),
       "ACCELEROMETER",
